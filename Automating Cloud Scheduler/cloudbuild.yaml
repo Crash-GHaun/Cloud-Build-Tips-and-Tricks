@@ -1,0 +1,22 @@
+steps:
+
+  # Deploy a function or whatever and then setup a scheduler
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy or Update Cloud Scheduler'
+  args: 
+  - '-c'
+  - |
+    SCHEDULE_NAME="hello-scheduler"
+    ATTEMPT_DEADLINE="1800s"
+    SCHEDULE="00 1 * * 1"
+    LOCATION="us-central1"
+    read -r SERVICE_ACCOUNT URI <<< $(gcloud functions describe cloud-functions-name --gen2 \
+    --region=$LOCATION --format="value(serviceConfig.serviceAccountEmail, serviceConfig.uri)")
+    if [ "$(gcloud scheduler jobs list --location=$LOCATION | grep -c $SCHEDULE_NAME)" == 0 ]; then 
+      gcloud scheduler jobs create http $SCHEDULE_NAME --schedule="$SCHEDULE" --uri=$URI --http-method=GET \
+      --oidc-service-account-email=$SERVICE_ACCOUNT --location=$LOCATION --attempt-deadline=$ATTEMPT_DEADLINE;
+      else
+      gcloud scheduler jobs update http $SCHEDULE_NAME --schedule="$SCHEDULE" --attempt-deadline=$ATTEMPT_DEADLINE \
+      --location=$LOCATION
+    fi
