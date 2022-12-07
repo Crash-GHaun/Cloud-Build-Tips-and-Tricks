@@ -2,16 +2,21 @@ steps:
 
   # Deploy a function or whatever and then setup a scheduler
 
+# https://cloud.google.com/build/docs/configuring-builds/run-bash-scripts
+# For this to work Cloud Build Service account needs access to List, Update, and Create Cloud Scheduler Jobs
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   id: 'Deploy or Update Cloud Scheduler'
-  args: 
-  - '-c'
-  - |
-    SCHEDULE_NAME="hello-scheduler"
+  dir: 'cloud-functions/get_erc721_names'
+  # We must specify BASH otherwise it uses /bin/sh which is DASH on Ubuntu
+  # Dash does not support Redirection, so if you want to use DASH
+  # I recommend breaking up the READ line into two lines of setting variables
+  script: |
+    #!/usr/bin/env bash
+    SCHEDULE_NAME="get-erc721-names"
     ATTEMPT_DEADLINE="1800s"
     SCHEDULE="00 1 * * 1"
     LOCATION="us-central1"
-    read -r SERVICE_ACCOUNT URI <<< $(gcloud functions describe cloud-functions-name --gen2 \
+    read -r SERVICE_ACCOUNT URI <<< $(gcloud functions describe cloud-functions--get-erc721-names --gen2 \
     --region=$LOCATION --format="value(serviceConfig.serviceAccountEmail, serviceConfig.uri)")
     if [ "$(gcloud scheduler jobs list --location=$LOCATION | grep -c $SCHEDULE_NAME)" == 0 ]; then 
       gcloud scheduler jobs create http $SCHEDULE_NAME --schedule="$SCHEDULE" --uri=$URI --http-method=GET \
