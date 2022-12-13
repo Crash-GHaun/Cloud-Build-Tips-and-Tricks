@@ -6,7 +6,6 @@ steps:
 # For this to work Cloud Build Service account needs access to List, Update, and Create Cloud Scheduler Jobs
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   id: 'Deploy or Update Cloud Scheduler'
-  dir: 'cloud-functions/get_erc721_names'
   # We must specify BASH otherwise it uses /bin/sh which is DASH on Ubuntu
   # Dash does not support Redirection, so if you want to use DASH
   # I recommend breaking up the READ line into two lines of setting variables
